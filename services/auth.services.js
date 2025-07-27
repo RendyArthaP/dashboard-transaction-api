@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.models");
 
-const register = async (name, email, password, roles = "user") => {
+const handleRegister = async (name, email, password, roles = "user") => {
   const existingUser = await userModel.getUserByEmail(email);
   const validRoles = ["user", "admin", "owner"];
 
@@ -25,29 +25,26 @@ const register = async (name, email, password, roles = "user") => {
   return user;
 };
 
-const login = async (email, password) => {
+const handleLogin = async (email, password) => {
   const user = await userModel.getUserByEmail(email);
   const isMatch = await bcrypt.compare(password, user.password);
 
-  if (!user) throw new Error("Invalid credentials");
+  if (!user && !isMatch) throw new Error("Invalid credentials");
 
-  if (!isMatch) throw new Error("Invalid credentials");
+  const payload = {
+    name: user.name,
+    roles: user.roles,
+    email: user.email,
+  };
 
-  const token = jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "1d",
-    }
-  );
+  const token = jwt.sign(payload, process.env.JWT_KEY, {
+    expiresIn: "1d",
+  });
 
-  return { user, token };
+  return { token };
 };
 
 module.exports = {
-  register,
-  login,
+  handleRegister,
+  handleLogin,
 };

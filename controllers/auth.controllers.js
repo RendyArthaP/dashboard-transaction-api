@@ -4,7 +4,7 @@ const register = async (req, res) => {
   const { name, email, password, roles } = req.body;
 
   try {
-    const user = await authService.register(name, email, password, roles);
+    const user = await authService.handleRegister(name, email, password, roles);
     res.status(200).json({
       message: "User created",
       data: user,
@@ -17,7 +17,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const { user, token } = await authService.login(email, password);
+    const { user, token } = await authService.handleLogin(email, password);
     res.status(200).json({
       message: "Login success",
       data: user,
