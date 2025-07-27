@@ -15,8 +15,8 @@ const getUserByName = async (name) => {
   return res.rows[0];
 };
 
-const getUserByRole = async (role) => {
-  const res = await db.query("SELECT * FROM users WHERE roles = $1", [role]);
+const getUserByRole = async (roles) => {
+  const res = await db.query("SELECT * FROM users WHERE roles = $1", [roles]);
   return res.rows[0];
 };
 

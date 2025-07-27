@@ -2,19 +2,19 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.models");
 
-const register = async (name, email, password, role = "user") => {
+const register = async (name, email, password, roles = "user") => {
   const existingUser = await userModel.getUserByEmail(email);
-  if (existingUser) throw new Error("User already exists");
-
   const validRoles = ["user", "admin", "owner"];
 
-  if (role === "owner") {
-    const ownerExists = await userModel.findUserByRole("owner");
+  if (existingUser) throw new Error("User already exists");
+
+  if (roles === "owner") {
+    const ownerExists = await userModel.getUserByRole("owner");
     if (ownerExists) throw new Error("Owner already exists");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const safeRole = validRoles.includes(role) ? role : "user";
+  const safeRole = validRoles.includes(roles) ? roles : "user";
 
   const user = await userModel.createUser(
     name,
@@ -27,9 +27,10 @@ const register = async (name, email, password, role = "user") => {
 
 const login = async (email, password) => {
   const user = await userModel.getUserByEmail(email);
+  const isMatch = await bcrypt.compare(password, user.password);
+
   if (!user) throw new Error("Invalid credentials");
 
-  const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error("Invalid credentials");
 
   const token = jwt.sign(
