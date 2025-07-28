@@ -30,14 +30,23 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   const authHeader = req.headers.authorization;
-
-  if (!authHeader) return res.status(400).json({ message: "No token" });
-
   const token = authHeader.split(" ")[1];
 
-  await authService.blacklistToken(token);
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(400).json({ message: "Missing or malformed token" });
+  }
 
-  res.json({ message: "Logged out successfully" });
+  if (!token) {
+    return res.status(400).json({ message: "Token missing" });
+  }
+
+  try {
+    await authService.blacklistToken(token);
+    res.json({ message: "Logged out successfully" });
+  } catch (err) {
+    console.error("Logout error:", err.message);
+    res.status(500).json({ message: "Logout failed" });
+  }
 };
 
 module.exports = {

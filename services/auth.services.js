@@ -46,9 +46,12 @@ const handleLogin = async (email, password) => {
 };
 
 const blacklistToken = async (token) => {
-  console.log(token);
+  if (!token || typeof token !== "string") {
+    throw new Error("Invalid token for blacklisting");
+  }
+
   await redisClient.set(token, "blacklisted", {
-    EX: 60 * 60 * 24, // 1 day expiry
+    EX: 60 * 60 * 24, // 1 day
   });
 };
 
