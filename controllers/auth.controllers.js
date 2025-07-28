@@ -28,7 +28,20 @@ const login = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) return res.status(400).json({ message: "No token" });
+
+  const token = authHeader.split(" ")[1];
+
+  await authService.blacklistToken(token);
+
+  res.json({ message: "Logged out successfully" });
+};
+
 module.exports = {
   register,
   login,
+  logout,
 };

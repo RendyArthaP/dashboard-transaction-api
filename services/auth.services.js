@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.models");
+const redisClient = require("../config/redisClient");
 
 const handleRegister = async (name, email, password, roles = "user") => {
   const existingUser = await userModel.getUserByEmail(email);
@@ -44,7 +45,21 @@ const handleLogin = async (email, password) => {
   return { token };
 };
 
+const blacklistToken = async (token) => {
+  console.log(token);
+  await redisClient.set(token, "blacklisted", {
+    EX: 60 * 60 * 24, // 1 day expiry
+  });
+};
+
+const isTokenBlacklisted = async (token) => {
+  const result = await redisClient.get(token);
+  return result === "blacklisted";
+};
+
 module.exports = {
   handleRegister,
   handleLogin,
+  blacklistToken,
+  isTokenBlacklisted,
 };
