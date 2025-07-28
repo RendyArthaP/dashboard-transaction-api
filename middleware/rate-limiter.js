@@ -5,6 +5,11 @@ const redisClient = require("../config/redisClient");
 const rateLimiter = rateLimit({
   // Rate limiter configuration
   windowMs: 15 * 60 * 1000, // 15 minutes
+  message: {
+    success: false,
+    message: "You're being rate limited. Please slow down.",
+  },
+  statusCode: 429, // HTTP status code for Too Many Requests
   max: 20, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
