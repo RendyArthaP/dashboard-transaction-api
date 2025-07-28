@@ -3,11 +3,11 @@ const { isTokenBlacklisted } = require("../services/auth.services");
 
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
+  const token = authHeader.split(" ")[1];
+  const blacklisted = await isTokenBlacklisted(token);
+
   if (!authHeader) return res.status(401).json({ message: "No token" });
 
-  const token = authHeader.split(" ")[1];
-
-  const blacklisted = await isTokenBlacklisted(token);
   if (blacklisted)
     return res.status(403).json({ message: "Token expired or blacklisted" });
 
