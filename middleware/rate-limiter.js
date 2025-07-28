@@ -1,23 +1,36 @@
 const rateLimit = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
 const redisClient = require("../config/redisClient");
+const { ipKeyGenerator } = require("express-rate-limit");
 
+// Rate limiter constants
+const WINDOW_MINUTES = 15;
+const MAX_REQUESTS = 20;
+const RETRY_AFTER_SECONDS = WINDOW_MINUTES * 60;
+
+// Custom rate limit handler
+const rateLimitHandler = (req, res) => {
+  res.set("Retry-After", RETRY_AFTER_SECONDS);
+  res.status(429).json({
+    error: true,
+    message: `Rate limit exceeded. Please try again after ${WINDOW_MINUTES} minutes.`,
+  });
+};
+
+// Redis store setup
+const redisStore = new RedisStore({
+  sendCommand: (...args) => redisClient.sendCommand(args),
+});
+
+// Main limiter instance
 const rateLimiter = rateLimit({
-  // Rate limiter configuration
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  message: {
-    success: false,
-    message: "You're being rate limited. Please slow down.",
-  },
-  statusCode: 429, // HTTP status code for Too Many Requests
-  max: 20, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-
-  // Redis store configuration
-  store: new RedisStore({
-    sendCommand: (...args) => redisClient.sendCommand(args),
-  }),
+  windowMs: RETRY_AFTER_SECONDS * 1000,
+  max: MAX_REQUESTS,
+  keyGenerator: ipKeyGenerator,
+  handler: rateLimitHandler,
+  store: redisStore,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 module.exports = rateLimiter;
